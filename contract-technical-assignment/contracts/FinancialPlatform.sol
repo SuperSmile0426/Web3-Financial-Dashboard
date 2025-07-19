@@ -183,7 +183,7 @@ contract FinancialPlatform is AccessControl, ReentrancyGuard {
         string memory reason
     ) external onlyRegisteredUser {
         require(transactions[transactionId].id != 0, "Transaction does not exist");
-        require(transactions[transactionId].from == msg.sender, "Not transaction owner");
+        require(transactions[transactionId].to == msg.sender, "Not transaction recipient");
         require(transactions[transactionId].status == TransactionStatus.Pending, "Transaction not pending");
 
         _approvalIds++;
@@ -213,9 +213,15 @@ contract FinancialPlatform is AccessControl, ReentrancyGuard {
         uint256 approvalId,
         bool approved,
         string memory reason
-    ) external onlyApprover {
+    ) external {
         require(approvals[approvalId].id != 0, "Approval does not exist");
         require(approvals[approvalId].status == ApprovalStatus.Pending, "Approval already processed");
+        
+        // Allow transaction sender or admin/manager to process approval
+        uint256 transactionId = approvals[approvalId].transactionId;
+        bool isTransactionSender = transactions[transactionId].from == msg.sender;
+        bool isApprover = hasRole(APPROVER_ROLE, msg.sender) || hasRole(ADMIN_ROLE, msg.sender);
+        require(isTransactionSender || isApprover, "Not authorized to process approval");
 
         ApprovalStatus status = approved ? ApprovalStatus.Approved : ApprovalStatus.Rejected;
         approvals[approvalId].status = status;
@@ -223,7 +229,6 @@ contract FinancialPlatform is AccessControl, ReentrancyGuard {
         approvals[approvalId].reason = reason;
 
         // Update transaction status based on approval
-        uint256 transactionId = approvals[approvalId].transactionId;
         if (approved) {
             transactions[transactionId].status = TransactionStatus.Active;
         } else {
@@ -279,6 +284,28 @@ contract FinancialPlatform is AccessControl, ReentrancyGuard {
      * @dev Get approval by ID
      */
     function getApproval(uint256 approvalId) external view returns (Approval memory) {
+        return approvals[approvalId];
+    }
+
+    /**
+     * @dev Get approval details for a specific transaction
+     */
+    function getTransactionApproval(uint256 transactionId) external view returns (Approval memory) {
+        require(transactions[transactionId].id != 0, "Transaction does not exist");
+        uint256 approvalId = transactions[transactionId].approvalId;
+        if (approvalId == 0) {
+            // Return empty approval if no approval exists
+            return Approval({
+                id: 0,
+                transactionId: 0,
+                requester: address(0),
+                approver: address(0),
+                approvalType: ApprovalType.Transaction,
+                status: ApprovalStatus.Pending,
+                reason: "",
+                timestamp: 0
+            });
+        }
         return approvals[approvalId];
     }
 
