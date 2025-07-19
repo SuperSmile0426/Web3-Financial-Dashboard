@@ -26,6 +26,7 @@ export function Web3Provider({ children }: { children: ReactNode }) {
   const [contract, setContract] = useState<ethers.Contract | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isManuallyDisconnected, setIsManuallyDisconnected] = useState(false)
 
   // Contract address - supports both localhost and Holesky
   const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0x11B8A04622aa68603f82B219625e64E792700378'
@@ -62,6 +63,14 @@ export function Web3Provider({ children }: { children: ReactNode }) {
       blockExplorerUrls: ['https://holesky.etherscan.io']
     }
   }
+
+  // Check localStorage for manual disconnect state on mount
+  useEffect(() => {
+    const disconnectedState = localStorage.getItem('wallet_disconnected')
+    if (disconnectedState === 'true') {
+      setIsManuallyDisconnected(true)
+    }
+  }, [])
 
   const addNetworkToMetaMask = async (networkName: string) => {
     const networkConfig = NETWORK_CONFIG[networkName]
@@ -162,6 +171,10 @@ export function Web3Provider({ children }: { children: ReactNode }) {
       setProvider(updatedProvider)
       setSigner(signer)
       setContract(contract)
+      
+      // Clear manual disconnect state since user is connecting
+      setIsManuallyDisconnected(false)
+      localStorage.removeItem('wallet_disconnected')
 
       console.log('Wallet connected successfully:', accounts[0])
 
@@ -173,12 +186,48 @@ export function Web3Provider({ children }: { children: ReactNode }) {
     }
   }
 
-  const disconnectWallet = () => {
+  const disconnectWallet = async () => {
+    try {
+      // Try multiple methods to disconnect from MetaMask
+      if (window.ethereum) {
+        try {
+          // Method 1: Try to revoke permissions (may not work in all MetaMask versions)
+          await window.ethereum.request({
+            method: 'wallet_revokePermissions',
+            params: [{ eth_accounts: {} }]
+          })
+          console.log('MetaMask permissions revoked successfully')
+        } catch (error: any) {
+          console.log('MetaMask revoke permissions not supported or failed:', error.message)
+          
+          // Method 2: Try to request permissions again to trigger disconnect
+          try {
+            await window.ethereum.request({
+              method: 'wallet_requestPermissions',
+              params: [{ eth_accounts: {} }]
+            })
+            console.log('MetaMask permissions re-requested')
+          } catch (error2: any) {
+            console.log('MetaMask permission request failed:', error2.message)
+          }
+        }
+      }
+    } catch (error) {
+      console.log('Error during MetaMask disconnect:', error)
+    }
+
+    // Clear local state
     setAccount(null)
     setProvider(null)
     setSigner(null)
     setContract(null)
     setError(null)
+    setIsManuallyDisconnected(true)
+    
+    // Store disconnect state in localStorage
+    localStorage.setItem('wallet_disconnected', 'true')
+    
+    console.log('Wallet disconnected successfully')
   }
 
   const refreshContract = async () => {
@@ -190,15 +239,16 @@ export function Web3Provider({ children }: { children: ReactNode }) {
     console.log('Contract refreshed successfully.')
   }
 
-  // Auto-connect if previously connected
+  // Auto-connect if previously connected and not manually disconnected
   useEffect(() => {
-    if (window.ethereum && window.ethereum.selectedAddress) {
+    if (window.ethereum && window.ethereum.selectedAddress && !isManuallyDisconnected) {
       connectWallet()
     }
 
     // Set up event listeners for account and chain changes
     const handleAccountsChanged = async (accounts: string[]) => {
       if (accounts.length === 0) {
+        // User disconnected from MetaMask
         disconnectWallet()
       } else {
         const newAccount = accounts[0]
@@ -213,6 +263,10 @@ export function Web3Provider({ children }: { children: ReactNode }) {
           setProvider(updatedProvider)
           setSigner(newSigner)
           setContract(newContract)
+          
+          // Clear manual disconnect state since user is connecting
+          setIsManuallyDisconnected(false)
+          localStorage.removeItem('wallet_disconnected')
           
           console.log('Account changed, contract updated with new signer:', newAccount)
         } catch (error) {
@@ -247,7 +301,7 @@ export function Web3Provider({ children }: { children: ReactNode }) {
         window.ethereum.removeListener('chainChanged', handleChainChanged)
       }
     }
-  }, [])
+  }, [isManuallyDisconnected])
 
   const value: Web3ContextType = {
     account,

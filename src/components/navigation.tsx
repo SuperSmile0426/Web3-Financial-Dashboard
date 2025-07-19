@@ -3,13 +3,14 @@
 import { useWeb3 } from '@/components/web3-provider'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Wallet, LogOut, Network, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
+import { Wallet, LogOut, Network, CheckCircle, AlertCircle, Loader2, RefreshCw } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 export function Navigation() {
   const { account, isConnected, disconnectWallet, provider, connectWallet, isLoading, error } = useWeb3()
   const [networkInfo, setNetworkInfo] = useState<{ name: string; chainId: string } | null>(null)
   const [isCorrectNetwork, setIsCorrectNetwork] = useState<boolean | null>(null)
+  const [isManuallyDisconnected, setIsManuallyDisconnected] = useState(false)
 
   useEffect(() => {
     const getNetworkInfo = async () => {
@@ -31,6 +32,12 @@ export function Navigation() {
     getNetworkInfo()
   }, [provider])
 
+  // Check for manual disconnect state
+  useEffect(() => {
+    const disconnectedState = localStorage.getItem('wallet_disconnected')
+    setIsManuallyDisconnected(disconnectedState === 'true')
+  }, [])
+
   const formatAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`
   }
@@ -45,6 +52,18 @@ export function Navigation() {
     return isCorrectNetwork ? <CheckCircle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />
   }
 
+  const handleDisconnect = async () => {
+    await disconnectWallet()
+    setIsManuallyDisconnected(true)
+  }
+
+  const clearDisconnectState = () => {
+    localStorage.removeItem('wallet_disconnected')
+    setIsManuallyDisconnected(false)
+    // Force a page reload to trigger auto-connect
+    window.location.reload()
+  }
+
   return (
     <nav className="border-b border-slate-200 bg-white/80 backdrop-blur-md supports-[backdrop-filter]:bg-white/60 sticky top-0 z-50">
       <div className="container mx-auto px-4">
@@ -57,6 +76,12 @@ export function Navigation() {
               <Badge variant={getNetworkBadgeVariant()} className="flex items-center space-x-1 text-xs">
                 {getNetworkIcon()}
                 <span>{networkInfo.name}</span>
+              </Badge>
+            )}
+            {isManuallyDisconnected && !isConnected && (
+              <Badge variant="secondary" className="flex items-center space-x-1 text-xs">
+                <AlertCircle className="h-3 w-3" />
+                <span>Manually Disconnected</span>
               </Badge>
             )}
           </div>
@@ -76,7 +101,7 @@ export function Navigation() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={disconnectWallet}
+                  onClick={handleDisconnect}
                   className="border-slate-200 hover:bg-slate-50"
                 >
                   <LogOut className="h-4 w-4 mr-2" />
@@ -84,24 +109,37 @@ export function Navigation() {
                 </Button>
               </>
             ) : (
-              <Button 
-                onClick={connectWallet} 
-                disabled={isLoading}
-                size="sm"
-                className="px-4 h-9 text-sm font-medium"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Connecting...
-                  </>
-                ) : (
-                  <>
-                    <Wallet className="mr-2 h-4 w-4" />
-                    Connect Wallet
-                  </>
+              <div className="flex items-center space-x-2">
+                <Button 
+                  onClick={connectWallet} 
+                  disabled={isLoading}
+                  size="sm"
+                  className="px-4 h-9 text-sm font-medium"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Connecting...
+                    </>
+                  ) : (
+                    <>
+                      <Wallet className="mr-2 h-4 w-4" />
+                      Connect Wallet
+                    </>
+                  )}
+                </Button>
+                {isManuallyDisconnected && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearDisconnectState}
+                    className="text-xs"
+                    title="Clear disconnect state and allow auto-connect"
+                  >
+                    <RefreshCw className="h-3 w-3" />
+                  </Button>
                 )}
-              </Button>
+              </div>
             )}
           </div>
         </div>
