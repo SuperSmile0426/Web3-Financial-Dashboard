@@ -135,13 +135,19 @@ function RequestApprovalDialog({ transactionId }: { transactionId: bigint }) {
 }
 
 export function TransactionList() {
-  const { useCurrentUserTransactions, useRequestApproval, useCompleteTransaction } = useContract()
+  const { useCurrentUserTransactions, useRequestApproval, useCompleteTransaction, useCurrentUser } = useContract()
   const { account, contract } = useWeb3()
   
-  // Fetch user's transactions
+  // Fetch user's transactions and current user info
   const userTransactions = useCurrentUserTransactions()
+  const currentUser = useCurrentUser()
   const requestApproval = useRequestApproval()
   const completeTransaction = useCompleteTransaction()
+  
+  // Determine user permissions
+  const isAdmin = currentUser.data?.role === 2
+  const isManager = currentUser.data?.role === 1
+  const canRequestApproval = isAdmin || isManager
   
   // Get transaction details for each transaction ID
   const transactions = userTransactions.data?.map((tx: Transaction) => ({
@@ -179,6 +185,13 @@ export function TransactionList() {
       default:
         return <FileText className="h-4 w-4 text-gray-500" />
     }
+  }
+
+  // Check if current user can request approval for a specific transaction
+  const canRequestApprovalForTransaction = (transaction: any) => {
+    if (canRequestApproval) return true // Admin/Manager can request approval for any transaction
+    if (!account) return false
+    return transaction.to.toLowerCase() === account.toLowerCase() // Only receiver can request approval
   }
 
   return (
@@ -240,6 +253,25 @@ export function TransactionList() {
                     <p className="text-sm text-muted-foreground">
                       {tx.from} → {tx.to}
                     </p>
+                    {account && (
+                      <div className="flex items-center space-x-2 mt-1">
+                        {tx.from.toLowerCase() === account.toLowerCase() && (
+                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
+                            You are Sender
+                          </span>
+                        )}
+                        {tx.to.toLowerCase() === account.toLowerCase() && (
+                          <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">
+                            You are Receiver
+                          </span>
+                        )}
+                        {canRequestApproval && (
+                          <span className="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded">
+                            Admin/Manager
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center space-x-4">
@@ -262,8 +294,13 @@ export function TransactionList() {
                       {tx.status}
                     </span>
                     <div className="flex space-x-2">
-                      {tx.statusCode === TransactionStatus.Pending && tx.approvalId === 0 && (
+                      {tx.statusCode === TransactionStatus.Pending && tx.approvalId === 0 && canRequestApprovalForTransaction(tx) && (
                         <RequestApprovalDialog transactionId={BigInt(tx.id)} />
+                      )}
+                      {tx.statusCode === TransactionStatus.Pending && tx.approvalId === 0 && !canRequestApprovalForTransaction(tx) && (
+                        <span className="text-xs text-muted-foreground px-2 py-1 bg-gray-100 rounded">
+                          Waiting for Receiver
+                        </span>
                       )}
                       {tx.statusCode === TransactionStatus.Pending && tx.approvalId !== 0 && (
                         <span className="text-xs text-muted-foreground px-2 py-1 bg-gray-100 rounded">
