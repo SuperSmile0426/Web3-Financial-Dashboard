@@ -259,7 +259,8 @@ export function useContract() {
         queryClient.invalidateQueries({ queryKey: ['transaction-count'] })
       },
       onError: (error: Error) => {
-        toast.error(`Failed to create transaction: ${error.message}`)
+        // Show specific error message from contract
+        toast.error(error.message)
       }
     })
   }
@@ -276,7 +277,7 @@ export function useContract() {
         queryClient.invalidateQueries({ queryKey: ['user-transactions'] })
       },
       onError: (error: Error) => {
-        toast.error(`Failed to complete transaction: ${error.message}`)
+        toast.error(error.message)
       }
     })
   }
@@ -296,7 +297,7 @@ export function useContract() {
         queryClient.invalidateQueries({ queryKey: ['user-transactions'] })
       },
       onError: (error: Error) => {
-        toast.error(`Failed to request approval: ${error.message}`)
+        toast.error(error.message)
       }
     })
   }
@@ -316,7 +317,7 @@ export function useContract() {
         queryClient.invalidateQueries({ queryKey: ['approval-count'] })
       },
       onError: (error: Error) => {
-        toast.error(`Failed to process approval: ${error.message}`)
+        toast.error(error.message)
       }
     })
   }
@@ -333,7 +334,7 @@ export function useContract() {
         queryClient.invalidateQueries({ queryKey: ['user-count'] })
       },
       onError: (error: Error) => {
-        toast.error(`Failed to register user: ${error.message}`)
+        toast.error(error.message)
       }
     })
   }
@@ -350,7 +351,7 @@ export function useContract() {
         queryClient.invalidateQueries({ queryKey: ['user-count'] })
       },
       onError: (error: Error) => {
-        toast.error(`Failed to register: ${error.message}`)
+        toast.error(error.message)
       }
     })
   }
@@ -366,7 +367,7 @@ export function useContract() {
         queryClient.invalidateQueries({ queryKey: ['user'] })
       },
       onError: (error: Error) => {
-        toast.error(`Failed to update user role: ${error.message}`)
+        toast.error(error.message)
       }
     })
   }

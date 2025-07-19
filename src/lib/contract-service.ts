@@ -22,6 +22,105 @@ const convertBigIntToNumberSafe = (value: bigint): number => {
   }
 }
 
+// Utility function to extract and format contract error messages
+const formatContractError = (error: any): string => {
+  console.error('Contract error details:', error)
+  
+  // Handle different types of errors
+  if (error && typeof error === 'object') {
+    // Check for revert reason
+    if (error.reason) {
+      return error.reason
+    }
+    
+    // Check for error message
+    if (error.message) {
+      // Extract specific error messages from common patterns
+      const message = error.message.toLowerCase()
+      
+      // Gas/fee related errors
+      if (message.includes('insufficient funds') || message.includes('gas')) {
+        return 'Insufficient funds for transaction. Please check your wallet balance and gas fees.'
+      }
+      
+      // User rejection
+      if (message.includes('user rejected') || message.includes('user denied')) {
+        return 'Transaction was cancelled by user.'
+      }
+      
+      // Network/RPC errors
+      if (message.includes('network') || message.includes('rpc')) {
+        return 'Network connection error. Please check your internet connection and try again.'
+      }
+      
+      // Contract-specific errors
+      if (message.includes('user already registered')) {
+        return 'This wallet address is already registered.'
+      }
+      
+      if (message.includes('user not registered')) {
+        return 'User is not registered. Please register first.'
+      }
+      
+      if (message.includes('admin role required')) {
+        return 'Admin privileges required for this action.'
+      }
+      
+      if (message.includes('not authorized')) {
+        return 'You are not authorized to perform this action.'
+      }
+      
+      if (message.includes('transaction does not exist')) {
+        return 'Transaction not found.'
+      }
+      
+      if (message.includes('not transaction owner')) {
+        return 'You can only manage your own transactions.'
+      }
+      
+      if (message.includes('transaction not pending')) {
+        return 'Transaction is not in pending status.'
+      }
+      
+      if (message.includes('transaction not active')) {
+        return 'Transaction is not active.'
+      }
+      
+      if (message.includes('invalid recipient address') || message.includes('invalid wallet address')) {
+        return 'Invalid wallet address provided.'
+      }
+      
+      if (message.includes('amount must be greater than 0')) {
+        return 'Transaction amount must be greater than 0.'
+      }
+      
+      if (message.includes('name cannot be empty') || message.includes('email cannot be empty')) {
+        return 'Name and email are required fields.'
+      }
+      
+      // Return the original message if no specific pattern matches
+      return error.message
+    }
+    
+    // Check for error code
+    if (error.code) {
+      switch (error.code) {
+        case 4001:
+          return 'Transaction was rejected by user.'
+        case -32603:
+          return 'Internal JSON-RPC error. Please try again.'
+        case -32002:
+          return 'Request already pending. Please check your wallet.'
+        default:
+          return `Transaction failed (Error ${error.code}). Please try again.`
+      }
+    }
+  }
+  
+  // Fallback error message
+  return 'Transaction failed. Please try again.'
+}
+
 // Contract ABI - updated to match the actual deployed contract
 const CONTRACT_ABI = FinancialPlatformArtifact.abi;
 
@@ -101,7 +200,7 @@ export class ContractService {
       await tx.wait()
     } catch (error) {
       console.error('registerUser error:', error)
-      throw new Error(`Failed to register user: ${error}`)
+      throw new Error(formatContractError(error))
     }
   }
 
@@ -115,7 +214,7 @@ export class ContractService {
       await tx.wait()
     } catch (error) {
       console.error('selfRegister error:', error)
-      throw new Error(`Failed to self-register: ${error}`)
+      throw new Error(formatContractError(error))
     }
   }
 
@@ -129,7 +228,7 @@ export class ContractService {
       await tx.wait()
     } catch (error) {
       console.error('updateUserRole error:', error)
-      throw new Error(`Failed to update user role: ${error}`)
+      throw new Error(formatContractError(error))
     }
   }
 
@@ -144,7 +243,7 @@ export class ContractService {
       await tx.wait()
     } catch (error) {
       console.error('createTransaction error:', error)
-      throw new Error(`Failed to create transaction: ${error}`)
+      throw new Error(formatContractError(error))
     }
   }
 
@@ -257,7 +356,7 @@ export class ContractService {
       await tx.wait()
     } catch (error) {
       console.error('completeTransaction error:', error)
-      throw new Error(`Failed to complete transaction: ${error}`)
+      throw new Error(formatContractError(error))
     }
   }
 
@@ -272,11 +371,7 @@ export class ContractService {
       await tx.wait()
     } catch (error) {
       console.error('ContractService: Request approval error:', error)
-      if (error instanceof Error) {
-        throw new Error(`Failed to request approval: ${error.message}`)
-      } else {
-        throw new Error(`Failed to request approval: ${String(error)}`)
-      }
+      throw new Error(formatContractError(error))
     }
   }
 
@@ -290,7 +385,7 @@ export class ContractService {
       await tx.wait()
     } catch (error) {
       console.error('processApproval error:', error)
-      throw new Error(`Failed to process approval: ${error}`)
+      throw new Error(formatContractError(error))
     }
   }
 
