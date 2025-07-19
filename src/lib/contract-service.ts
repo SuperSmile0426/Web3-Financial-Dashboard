@@ -82,6 +82,11 @@ export class ContractService {
       return await this.contract.getAllUsers()
     } catch (error) {
       console.error('getAllUsers error:', error)
+      // If the error is due to admin role requirement, return empty array
+      if (error && typeof error === 'object' && 'reason' in error && error.reason === 'Admin role required') {
+        console.log('Admin role required for getAllUsers, returning empty array')
+        return []
+      }
       throw new Error(`Failed to get all users: ${error}`)
     }
   }
@@ -219,6 +224,11 @@ export class ContractService {
       return await this.contract.getAllTransactions()
     } catch (error) {
       console.error('getAllTransactions error:', error)
+      // If the error is due to admin role requirement, return empty array
+      if (error && typeof error === 'object' && 'reason' in error && error.reason === 'Admin role required') {
+        console.log('Admin role required for getAllTransactions, returning empty array')
+        return []
+      }
       throw new Error(`Failed to get all transactions: ${error}`)
     }
   }

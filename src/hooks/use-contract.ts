@@ -19,6 +19,12 @@ export function useContract() {
     return new ContractService(contractAddress, provider, signer, contract)
   }
 
+  // Helper function to check if current user is admin
+  const useIsAdmin = () => {
+    const currentUser = useCurrentUser()
+    return currentUser.data?.role === 2 // UserRole.Admin = 2
+  }
+
   // User queries
   const useUser = (address: string) => {
     return useQuery({
@@ -81,7 +87,15 @@ export function useContract() {
         }
       },
       enabled: !!contract && !!account && isAdmin,
-      retry: false, // Don't retry if it fails
+      retry: (failureCount, error) => {
+        // Don't retry if it's an admin role error or privilege error
+        if (error && typeof error === 'object' && 'message' in error && 
+            (error.message.includes('Admin role required') || 
+             error.message.includes('Admin privileges required'))) {
+          return false
+        }
+        return failureCount < 3
+      }
     })
   }
 
@@ -155,6 +169,14 @@ export function useContract() {
         return transactions
       },
       enabled: !!contract,
+      retry: (failureCount, error) => {
+        // Don't retry if it's an admin role error
+        if (error && typeof error === 'object' && 'message' in error && 
+            error.message.includes('Admin role required')) {
+          return false
+        }
+        return failureCount < 3
+      }
     })
   }
 
@@ -337,6 +359,7 @@ export function useContract() {
     useUser,
     useCurrentUser,
     useAllUsers,
+    useIsAdmin,
     useTransaction,
     useUserTransactions,
     useCurrentUserTransactions,
