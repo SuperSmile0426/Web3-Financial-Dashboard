@@ -11,6 +11,7 @@ interface Web3ContextType {
   contract: ethers.Contract | null
   connectWallet: () => Promise<void>
   disconnectWallet: () => void
+  refreshContract: () => Promise<void>
   isConnected: boolean
   isLoading: boolean
   error: string | null
@@ -162,27 +163,7 @@ export function Web3Provider({ children }: { children: ReactNode }) {
       setSigner(signer)
       setContract(contract)
 
-      // Listen for account changes
-      window.ethereum.on('accountsChanged', (accounts: string[]) => {
-        if (accounts.length === 0) {
-          disconnectWallet()
-        } else {
-          setAccount(accounts[0])
-        }
-      })
-
-      // Listen for chain changes
-      window.ethereum.on('chainChanged', (chainId: string) => {
-        // Check if the new chain is our target network
-        const targetChainId = NETWORK_CONFIG[process.env.NEXT_PUBLIC_NETWORK_NAME || 'holesky']?.chainId
-        if (chainId !== targetChainId) {
-          setError(`Please switch to the ${process.env.NEXT_PUBLIC_NETWORK_NAME || 'holesky'} network`)
-        } else {
-          setError(null)
-          // Reload the page to update the contract instance
-          window.location.reload()
-        }
-      })
+      console.log('Wallet connected successfully:', accounts[0])
 
     } catch (err) {
       console.error('Wallet connection error:', err)
@@ -200,10 +181,71 @@ export function Web3Provider({ children }: { children: ReactNode }) {
     setError(null)
   }
 
+  const refreshContract = async () => {
+    if (!signer) {
+      throw new Error('No signer available to refresh contract.')
+    }
+    const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
+    setContract(contract)
+    console.log('Contract refreshed successfully.')
+  }
+
   // Auto-connect if previously connected
   useEffect(() => {
     if (window.ethereum && window.ethereum.selectedAddress) {
       connectWallet()
+    }
+
+    // Set up event listeners for account and chain changes
+    const handleAccountsChanged = async (accounts: string[]) => {
+      if (accounts.length === 0) {
+        disconnectWallet()
+      } else {
+        const newAccount = accounts[0]
+        setAccount(newAccount)
+        
+        // Update provider, signer, and contract with new account
+        try {
+          const updatedProvider = new ethers.BrowserProvider(window.ethereum)
+          const newSigner = await updatedProvider.getSigner()
+          const newContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, newSigner)
+          
+          setProvider(updatedProvider)
+          setSigner(newSigner)
+          setContract(newContract)
+          
+          console.log('Account changed, contract updated with new signer:', newAccount)
+        } catch (error) {
+          console.error('Failed to update contract with new account:', error)
+          setError('Failed to update contract connection with new account')
+        }
+      }
+    }
+
+    const handleChainChanged = (chainId: string) => {
+      // Check if the new chain is our target network
+      const targetChainId = NETWORK_CONFIG[process.env.NEXT_PUBLIC_NETWORK_NAME || 'holesky']?.chainId
+      if (chainId !== targetChainId) {
+        setError(`Please switch to the ${process.env.NEXT_PUBLIC_NETWORK_NAME || 'holesky'} network`)
+      } else {
+        setError(null)
+        // Reload the page to update the contract instance
+        window.location.reload()
+      }
+    }
+
+    // Add event listeners
+    if (window.ethereum) {
+      window.ethereum.on('accountsChanged', handleAccountsChanged)
+      window.ethereum.on('chainChanged', handleChainChanged)
+    }
+
+    // Cleanup function
+    return () => {
+      if (window.ethereum) {
+        window.ethereum.removeListener('accountsChanged', handleAccountsChanged)
+        window.ethereum.removeListener('chainChanged', handleChainChanged)
+      }
     }
   }, [])
 
@@ -214,6 +256,7 @@ export function Web3Provider({ children }: { children: ReactNode }) {
     contract,
     connectWallet,
     disconnectWallet,
+    refreshContract,
     isConnected: !!account,
     isLoading,
     error,
