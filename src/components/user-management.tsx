@@ -183,26 +183,6 @@ export function UserManagement() {
           </p>
         </div>
         <div className="flex gap-2">
-          {/* Show registration button for unregistered users */}
-          {(!currentUser.data || !currentUser.data.isActive) && (
-            <Dialog open={showRegistration} onOpenChange={setShowRegistration}>
-              <DialogTrigger asChild>
-                <Button variant="outline">
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Register Account
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Register New Account</DialogTitle>
-                  <DialogDescription>
-                    Register your wallet address as a new user with Regular privileges
-                  </DialogDescription>
-                </DialogHeader>
-                <QuickRegistrationForm onSuccess={handleRegistrationSuccess} />
-              </DialogContent>
-            </Dialog>
-          )}
           
           {/* Show add user button for admins */}
           {isAdmin && (

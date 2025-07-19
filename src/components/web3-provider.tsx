@@ -28,7 +28,7 @@ export function Web3Provider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null)
 
   // Contract address - supports both localhost and Holesky
-  const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0x2c6ed0d78A0243e559ddBF88f063EC4563Ec1398'
+  const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0x11B8A04622aa68603f82B219625e64E792700378'
   
   // Use the same ABI as the contract service
   const CONTRACT_ABI = FinancialPlatformArtifact.abi
