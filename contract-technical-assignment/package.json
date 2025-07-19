@@ -1,0 +1,19 @@
+{
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:holesky": "hardhat run --network holesky scripts/deploy.ts"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@openzeppelin/hardhat-upgrades": "^3.9.0",
+    "@types/node": "^24.0.4",
+    "hardhat": "^2.24.3",
+    "ts-node": "^10.9.2"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.3.0",
+    "@openzeppelin/contracts-upgradeable": "^5.3.0",
+    "dotenv": "^16.5.0"
+  }
+}
