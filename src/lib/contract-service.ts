@@ -105,6 +105,20 @@ export class ContractService {
     }
   }
 
+  async selfRegister(name: string, email: string): Promise<void> {
+    try {
+      if (!this.checkFunction('selfRegister')) {
+        throw new Error('selfRegister function not available in contract ABI')
+      }
+      
+      const tx = await this.contract.selfRegister(name, email)
+      await tx.wait()
+    } catch (error) {
+      console.error('selfRegister error:', error)
+      throw new Error(`Failed to self-register: ${error}`)
+    }
+  }
+
   async updateUserRole(userAddress: string, newRole: UserRole): Promise<void> {
     try {
       if (!this.checkFunction('updateUserRole')) {

@@ -134,6 +134,20 @@ contract FinancialPlatform is AccessControl, ReentrancyGuard {
     }
 
     /**
+     * @dev Self-register as a regular user
+     */
+    function selfRegister(
+        string memory name,
+        string memory email
+    ) external {
+        require(!registeredUsers[msg.sender], "User already registered");
+        require(bytes(name).length > 0, "Name cannot be empty");
+        require(bytes(email).length > 0, "Email cannot be empty");
+        
+        _registerUser(msg.sender, name, email, UserRole.Regular);
+    }
+
+    /**
      * @dev Create a new transaction
      */
     function createTransaction(

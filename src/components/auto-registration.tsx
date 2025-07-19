@@ -24,12 +24,12 @@ type RegistrationFormData = z.infer<typeof registrationSchema>
 
 export function AutoRegistration() {
   const { account, isConnected } = useWeb3()
-  const { useCurrentUser, useRegisterUser } = useContract()
+  const { useCurrentUser, useSelfRegister } = useContract()
   const [showRegistration, setShowRegistration] = useState(false)
   const [isChecking, setIsChecking] = useState(true)
   
   const currentUser = useCurrentUser()
-  const registerUser = useRegisterUser()
+  const selfRegister = useSelfRegister()
   
   const form = useForm<RegistrationFormData>({
     resolver: zodResolver(registrationSchema),
@@ -62,11 +62,9 @@ export function AutoRegistration() {
     }
 
     try {
-      await registerUser.mutateAsync({
-        walletAddress: account,
+      await selfRegister.mutateAsync({
         name: data.name,
-        email: data.email,
-        role: UserRole.Regular
+        email: data.email
       })
       
       toast.success('User registered successfully!')
@@ -160,15 +158,15 @@ export function AutoRegistration() {
               <Button 
                 type="submit" 
                 className="flex-1"
-                disabled={registerUser.isPending}
+                disabled={selfRegister.isPending}
               >
-                {registerUser.isPending ? 'Registering...' : 'Register as Regular User'}
+                {selfRegister.isPending ? 'Registering...' : 'Register as Regular User'}
               </Button>
               <Button 
                 type="button" 
                 variant="outline"
                 onClick={() => setShowRegistration(false)}
-                disabled={registerUser.isPending}
+                disabled={selfRegister.isPending}
               >
                 Cancel
               </Button>

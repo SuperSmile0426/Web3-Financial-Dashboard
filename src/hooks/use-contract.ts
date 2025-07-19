@@ -338,6 +338,23 @@ export function useContract() {
     })
   }
 
+  const useSelfRegister = () => {
+    return useMutation({
+      mutationFn: async ({ name, email }: { name: string; email: string }) => {
+        const service = getContractService()
+        return service.selfRegister(name, email)
+      },
+      onSuccess: () => {
+        toast.success('Registration successful! Welcome to the platform.')
+        queryClient.invalidateQueries({ queryKey: ['user'] })
+        queryClient.invalidateQueries({ queryKey: ['user-count'] })
+      },
+      onError: (error: Error) => {
+        toast.error(`Failed to register: ${error.message}`)
+      }
+    })
+  }
+
   const useUpdateUserRole = () => {
     return useMutation({
       mutationFn: async ({ userAddress, newRole }: { userAddress: string; newRole: UserRole }) => {
@@ -377,6 +394,7 @@ export function useContract() {
     useRequestApproval,
     useProcessApproval,
     useRegisterUser,
+    useSelfRegister,
     useUpdateUserRole,
   }
 } 
