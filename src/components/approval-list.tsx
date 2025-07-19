@@ -111,7 +111,7 @@ function ProcessApprovalDialog({
 }
 
 export function ApprovalList() {
-  const { usePendingApprovals, useApproval, useCurrentUser } = useContract()
+  const { usePendingApprovals, useApproval, useCurrentUser, useTransaction } = useContract()
   const { account } = useWeb3()
   
   // Fetch current user to determine their role and permissions
@@ -125,7 +125,7 @@ export function ApprovalList() {
   // Fetch pending approvals
   const pendingApprovals = usePendingApprovals(canViewApprovals)
   
-  // Get approval details and filter based on permissions
+  // Get approval details with transaction information
   const allApprovals = pendingApprovals.data?.map((approval: Approval) => ({
     id: Number(approval.id),
     transactionId: Number(approval.transactionId),
@@ -136,10 +136,9 @@ export function ApprovalList() {
     timestamp: new Date(Number(approval.timestamp) * 1000).toISOString()
   })) || []
   
-  // Filter approvals based on user permissions
-  const approvals = canViewApprovals 
-    ? allApprovals 
-    : allApprovals.filter(approval => approval.requester === account)
+  // For regular users, we'll show all pending approvals but add transaction context
+  // The contract will handle authorization when they try to process the approval
+  const approvals = allApprovals
 
   function getStatusText(status: number): string {
     switch (status) {
@@ -203,7 +202,7 @@ export function ApprovalList() {
           <p className="text-muted-foreground">
             {canViewApprovals 
               ? 'Review and process all pending approval requests' 
-              : 'Review and process your pending approval requests'
+              : 'Review all pending approvals. You can process approvals for transactions you sent.'
             }
           </p>
         </div>
@@ -212,11 +211,11 @@ export function ApprovalList() {
       <Card>
         <CardHeader>
           <CardTitle>
-            {canViewApprovals ? 'All Pending Approvals' : 'My Pending Approvals'}
+            {canViewApprovals ? 'All Pending Approvals' : 'Pending Approvals'}
           </CardTitle>
           {!canViewApprovals && (
             <p className="text-sm text-muted-foreground">
-              Showing only your approval requests. Admin and Manager users can view all approvals.
+              Showing all pending approvals. You can only process approvals for transactions you sent.
             </p>
           )}
         </CardHeader>
@@ -237,7 +236,7 @@ export function ApprovalList() {
           ) : approvals.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground">
-                {canViewApprovals ? 'No pending approvals found' : 'No pending approvals for your transactions'}
+                {canViewApprovals ? 'No pending approvals found' : 'No pending approvals available'}
               </p>
             </div>
           ) : (
@@ -250,35 +249,64 @@ export function ApprovalList() {
                 </div>
               )}
               <div className="space-y-4">
-                {approvals.map((approval: any) => (
-                <div
-                  key={approval.id}
-                  className="flex items-center justify-between p-4 border rounded-lg"
-                >
-                  <div className="flex items-center space-x-4">
-                    {getStatusIcon(approval.status)}
-                    <div>
-                      <p className="font-medium">{approval.reason}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Requested by {approval.requester}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    {approval.statusCode === ApprovalStatus.Pending && (
-                      <>
-                        <ProcessApprovalDialog approvalId={BigInt(approval.id)} approved={true} />
-                        <ProcessApprovalDialog approvalId={BigInt(approval.id)} approved={false} />
-                      </>
-                    )}
-                    <div className="text-right">
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(approval.timestamp).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                {approvals.map((approval: any) => {
+                  // Create a component to fetch and display transaction details
+                  const TransactionApprovalItem = () => {
+                    const transaction = useTransaction(BigInt(approval.transactionId))
+                    const isSender = transaction.data?.from.toLowerCase() === account?.toLowerCase()
+                    const canProcess = canViewApprovals || isSender
+                    
+                    return (
+                      <div
+                        key={approval.id}
+                        className={`flex items-center justify-between p-4 border rounded-lg ${
+                          canProcess ? 'bg-blue-50/50 border-blue-200' : 'bg-gray-50/50 border-gray-200'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-4">
+                          {getStatusIcon(approval.status)}
+                          <div>
+                            <p className="font-medium">{approval.reason}</p>
+                            <p className="text-sm text-muted-foreground">
+                              Requested by {approval.requester}
+                            </p>
+                            {transaction.data && (
+                              <p className="text-sm text-muted-foreground">
+                                Transaction #{approval.transactionId}: {transaction.data.description} 
+                                ({transaction.data.from.slice(0, 6)}...{transaction.data.from.slice(-4)} → {transaction.data.to.slice(0, 6)}...{transaction.data.to.slice(-4)})
+                              </p>
+                            )}
+                            {!canProcess && (
+                              <p className="text-sm text-orange-600 mt-1">
+                                ⚠️ You cannot process this approval (not the transaction sender)
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {approval.statusCode === ApprovalStatus.Pending && canProcess && (
+                            <>
+                              <ProcessApprovalDialog approvalId={BigInt(approval.id)} approved={true} />
+                              <ProcessApprovalDialog approvalId={BigInt(approval.id)} approved={false} />
+                            </>
+                          )}
+                          {approval.statusCode === ApprovalStatus.Pending && !canProcess && (
+                            <span className="text-xs text-muted-foreground px-2 py-1 bg-gray-100 rounded">
+                              No Action Available
+                            </span>
+                          )}
+                          <div className="text-right">
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(approval.timestamp).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  }
+                  
+                  return <TransactionApprovalItem key={approval.id} />
+                })}
               </div>
             </>
           )}
