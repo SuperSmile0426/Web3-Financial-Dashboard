@@ -1,7 +1,6 @@
 'use client'
 
 import { useWeb3 } from '@/components/web3-provider'
-import { WalletConnect } from '@/components/wallet-connect'
 import { Dashboard } from '@/components/dashboard'
 import { Navigation } from '@/components/navigation'
 import { AutoRegistration } from '@/components/auto-registration'
@@ -21,7 +20,7 @@ export default function HomePage() {
                   Web3 Financial Dashboard
                 </h1>
                 <p className="text-xl text-slate-600 leading-relaxed">
-                  Connect your wallet to manage financial transactions, approvals, and users with blockchain integration.
+                  Connect your wallet using the button in the header to manage financial transactions, approvals, and users with blockchain integration.
                 </p>
               </div>
 
@@ -41,8 +40,13 @@ export default function HomePage() {
               </div>
             </div>
             
-            <div className="w-full max-w-md">
-              <WalletConnect />
+            <div className="text-center space-y-4">
+              <div className="text-lg font-medium text-slate-700">
+                Click "Connect Wallet" in the header to get started
+              </div>
+              <div className="text-sm text-slate-500">
+                Make sure you have MetaMask installed and are on the Holesky testnet
+              </div>
             </div>
           </div>
         ) : (

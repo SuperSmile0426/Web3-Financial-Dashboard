@@ -3,11 +3,11 @@
 import { useWeb3 } from '@/components/web3-provider'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Wallet, LogOut, Network, CheckCircle, AlertCircle } from 'lucide-react'
+import { Wallet, LogOut, Network, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 export function Navigation() {
-  const { account, isConnected, disconnectWallet, provider } = useWeb3()
+  const { account, isConnected, disconnectWallet, provider, connectWallet, isLoading, error } = useWeb3()
   const [networkInfo, setNetworkInfo] = useState<{ name: string; chainId: string } | null>(null)
   const [isCorrectNetwork, setIsCorrectNetwork] = useState<boolean | null>(null)
 
@@ -84,9 +84,24 @@ export function Navigation() {
                 </Button>
               </>
             ) : (
-              <div className="text-sm text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full">
-                Not connected
-              </div>
+              <Button 
+                onClick={connectWallet} 
+                disabled={isLoading}
+                size="sm"
+                className="px-4 h-9 text-sm font-medium"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Connecting...
+                  </>
+                ) : (
+                  <>
+                    <Wallet className="mr-2 h-4 w-4" />
+                    Connect Wallet
+                  </>
+                )}
+              </Button>
             )}
           </div>
         </div>
