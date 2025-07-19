@@ -13,7 +13,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { Plus, Users, Shield, UserCheck, UserPlus } from 'lucide-react'
+import { Plus, Users, Shield, UserCheck, UserPlus, AlertCircle } from 'lucide-react'
 import { NewUserForm } from './new-user-form'
 import { EditUserRole } from './edit-user-role'
 
@@ -113,13 +113,14 @@ function QuickRegistrationForm({ onSuccess }: { onSuccess: () => void }) {
 }
 
 export function UserManagement() {
-  const { useAllUsers, useCurrentUser, useUserCount } = useContract()
+  const { useAllUsers, useCurrentUser, useUserCount, useSelfRegister } = useContract()
   const { account } = useWeb3()
   const [showRegistration, setShowRegistration] = useState(false)
   
   // Fetch current user first to determine their role
   const currentUser = useCurrentUser()
   const userCount = useUserCount()
+  const selfRegister = useSelfRegister()
   
   // Determine if user is admin
   const isAdmin = currentUser.data?.role === 2
@@ -138,6 +139,37 @@ export function UserManagement() {
     role: getRoleText(user.role),
     isActive: user.isActive
   }))
+
+  // Form for auto-registration modal
+  const form = useForm<RegistrationFormData>({
+    resolver: zodResolver(registrationSchema),
+    defaultValues: {
+      name: '',
+      email: ''
+    }
+  })
+
+  const onSubmit = async (data: RegistrationFormData) => {
+    if (!account) {
+      toast.error('No wallet connected')
+      return
+    }
+
+    try {
+      await selfRegister.mutateAsync({
+        name: data.name,
+        email: data.email
+      })
+      
+      toast.success('User registered successfully!')
+      setShowRegistration(false)
+      form.reset()
+      currentUser.refetch()
+    } catch (error) {
+      toast.error('Failed to register user')
+      console.error('Registration error:', error)
+    }
+  }
 
   function getRoleText(role: number): string {
     switch (role) {
@@ -250,14 +282,88 @@ export function UserManagement() {
                         Register Now
                       </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="sm:max-w-md">
                       <DialogHeader>
-                        <DialogTitle>Register New Account</DialogTitle>
+                        <DialogTitle className="flex items-center space-x-2">
+                          <UserPlus className="h-5 w-5 text-blue-500" />
+                          <span>Welcome! Please Register</span>
+                        </DialogTitle>
                         <DialogDescription>
-                          Register your wallet address as a new user with Regular privileges
+                          Your wallet address <code className="text-xs bg-gray-100 px-1 rounded">{account}</code> is not registered. 
+                          Please provide your details to create a new account with Regular user privileges.
                         </DialogDescription>
                       </DialogHeader>
-                      <QuickRegistrationForm onSuccess={handleRegistrationSuccess} />
+                      
+                      <Card className="border-orange-200 bg-orange-50">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="flex items-center space-x-2 text-sm">
+                            <AlertCircle className="h-4 w-4 text-orange-500" />
+                            <span>New User Registration</span>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                          <p className="text-xs text-orange-700">
+                            You'll be registered as a Regular user. Contact an admin to upgrade your role if needed.
+                          </p>
+                        </CardContent>
+                      </Card>
+
+                      <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                          <FormField
+                            control={form.control}
+                            name="name"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Full Name</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="Enter your full name" 
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="email"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Email Address</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    type="email"
+                                    placeholder="Enter your email address" 
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <div className="flex gap-2 pt-2">
+                            <Button 
+                              type="submit" 
+                              className="flex-1"
+                              disabled={selfRegister.isPending}
+                            >
+                              {selfRegister.isPending ? 'Registering...' : 'Register as Regular User'}
+                            </Button>
+                            <Button 
+                              type="button" 
+                              variant="outline"
+                              onClick={() => setShowRegistration(false)}
+                              disabled={selfRegister.isPending}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </form>
+                      </Form>
                     </DialogContent>
                   </Dialog>
                 </div>
