@@ -433,76 +433,46 @@ export function DataCharts() {
     })
     
     return (
-      <></>
-      // <Card>
-      //   <CardHeader className="pb-4">
-      //     <CardTitle className="flex items-center space-x-2">
-      //       <TrendingUp className="h-4 w-4 text-green-500" />
-      //       <span>Weekly Activity Trend</span>
-      //     </CardTitle>
-      //   </CardHeader>
-      //   <CardContent className="pt-0">
-      //     <div className="space-y-6">
-      //       <div>
-      //         <h4 className="text-sm font-medium text-gray-700 pb-12">Transactions</h4>
-      //         <div className="flex items-end space-x-1 h-32">
-      //           {displayTransactionTrend.map((value, index) => {
-      //             // Calculate height in pixels for better control
-      //             const maxHeight = 120 // Maximum height in pixels
-      //             const height = value === 0 ? 8 : Math.max((value / maxTransactionValue) * maxHeight, 16)
-      //             console.log(`Transaction bar ${days[index]}: value=${value}, maxValue=${maxTransactionValue}, height=${height}px`)
+      <Card>
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center space-x-2">
+            <TrendingUp className="h-4 w-4 text-green-500" />
+            <span>Weekly Activity Trend</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="space-y-6">
+            <div>
+              <h4 className="text-sm font-medium text-gray-700 pb-12">Transactions</h4>
+              <div className="flex items-end space-x-1 h-32">
+                {displayTransactionTrend.map((value, index) => {
+                  // Calculate height in pixels for better control
+                  const maxHeight = 120 // Maximum height in pixels
+                  const height = value === 0 ? 8 : Math.max((value / maxTransactionValue) * maxHeight, 16)
+                  console.log(`Transaction bar ${days[index]}: value=${value}, maxValue=${maxTransactionValue}, height=${height}px`)
                   
-      //             return (
-      //               <div key={index} className="flex-1 flex flex-col items-center">
-      //                 <div
-      //                   className="w-full bg-blue-500 rounded-t transition-all duration-300"
-      //                   style={{ 
-      //                     height: `${height}px`
-      //                   }}
-      //                 />
-      //                 <span className="text-xs text-gray-500 mt-1">{days[index]}</span>
-      //                 <span className="text-xs text-gray-400">{value}</span>
-      //               </div>
-      //             )
-      //           })}
-      //         </div>
-      //         <div className="flex justify-between text-xs text-gray-500 mt-2">
-      //           <span>Total: {finalTransactionTotal}</span>
-      //           <span>Max: {maxTransactionValue}</span>
-      //         </div>
-      //       </div>
-            
-      //       <div>
-      //         <h4 className="text-sm font-medium text-gray-700 pb-12">Approvals</h4>
-      //         <div className="flex items-end space-x-1 h-32">
-      //           {displayApprovalTrend.map((value, index) => {
-      //             // Calculate height in pixels for better control
-      //             const maxHeight = 120 // Maximum height in pixels
-      //             const height = value === 0 ? 8 : Math.max((value / maxApprovalValue) * maxHeight, 16)
-      //             console.log(`Approval bar ${days[index]}: value=${value}, maxValue=${maxApprovalValue}, height=${height}px`)
-                  
-      //             return (
-      //               <div key={index} className="flex-1 flex flex-col items-center">
-      //                 <div
-      //                   className="w-full bg-purple-500 rounded-t transition-all duration-300"
-      //                   style={{ 
-      //                     height: `${height}px`
-      //                   }}
-      //                 />
-      //                 <span className="text-xs text-gray-500 mt-1">{days[index]}</span>
-      //                 <span className="text-xs text-gray-400">{value}</span>
-      //               </div>
-      //             )
-      //           })}
-      //         </div>
-      //         <div className="flex justify-between text-xs text-gray-500 mt-2">
-      //           <span>Total: {finalApprovalTotal}</span>
-      //           <span>Max: {maxApprovalValue}</span>
-      //         </div>
-      //       </div>
-      //     </div>
-      //   </CardContent>
-      // </Card>
+                  return (
+                    <div key={index} className="flex-1 flex flex-col items-center">
+                      <div
+                        className="w-full bg-blue-500 rounded-t transition-all duration-300"
+                        style={{ 
+                          height: `${height}px`
+                        }}
+                      />
+                      <span className="text-xs text-gray-500 mt-1">{days[index]}</span>
+                      <span className="text-xs text-gray-400">{value}</span>
+                    </div>
+                  )
+                })}
+              </div>
+              <div className="flex justify-between text-xs text-gray-500 mt-2">
+                <span>Total: {finalTransactionTotal}</span>
+                <span>Max: {maxTransactionValue}</span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     )
   }
 
