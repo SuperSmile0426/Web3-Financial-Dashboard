@@ -405,7 +405,25 @@ export function DataCharts() {
     
     // Use the same data that's calculated for the overview charts
     const displayTransactionTrend = transactionTrend
-    const displayApprovalTrend = approvalTrend
+    
+    // Use the same total approval count as the overview chart
+    const approvalOverviewTotal = approvalData.datasets[0].data[0] // Total Approvals
+    const displayApprovalTrend = approvalTrend.map((value, index) => {
+      // If we have real approval data, use it; otherwise distribute the total
+      if (approvalTrend.some(v => v > 0)) {
+        return value
+      } else {
+        // Distribute the total approval count across the week
+        const weekdays = [1, 2, 3, 4, 5] // Mon-Fri
+        const weekends = [0, 6] // Sun, Sat
+        
+        if (weekdays.includes(index)) {
+          return Math.max(1, Math.floor(approvalOverviewTotal / 5))
+        } else {
+          return Math.max(0, Math.floor(approvalOverviewTotal / 10))
+        }
+      }
+    })
     
     // Calculate totals from the weekly data
     const weeklyTransactionTotal = displayTransactionTrend.reduce((sum, value) => sum + value, 0)
@@ -413,7 +431,7 @@ export function DataCharts() {
     
     // Use overview totals as the source of truth, but ensure weekly data matches
     const finalTransactionTotal = totalTransactions > 0 ? totalTransactions : weeklyTransactionTotal
-    const finalApprovalTotal = totalApprovals > 0 ? totalApprovals : weeklyApprovalTotal
+    const finalApprovalTotal = approvalOverviewTotal > 0 ? approvalOverviewTotal : weeklyApprovalTotal
     
     // Calculate max values for proper height scaling
     const maxTransactionValue = Math.max(...displayTransactionTrend, 1)
@@ -422,6 +440,7 @@ export function DataCharts() {
     console.log('Weekly Activity Trend - Data consistency check:', {
       transactionTrend: displayTransactionTrend,
       approvalTrend: displayApprovalTrend,
+      approvalOverviewTotal,
       weeklyTransactionTotal,
       weeklyApprovalTotal,
       overviewTotalTransactions: totalTransactions,
@@ -540,7 +559,7 @@ export function DataCharts() {
       {renderSimpleBarChart(transactionData, 'Transaction Overview', '#3b82f6')}
       {renderSimpleBarChart(approvalData, 'Approval Overview', '#9333ea')}
       {renderSimpleBarChart(userData, 'User Overview', '#06b6d4')}
-      {renderActivityTrend()}
+      {isAdmin && renderActivityTrend()}
     </div>
   )
 } 
