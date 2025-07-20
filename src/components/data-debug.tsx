@@ -24,7 +24,7 @@ export function DataDebug() {
   const pendingApprovals = usePendingApprovals()
   const currentUser = useCurrentUser()
   const recentTransactions = useRecentTransactions(BigInt(10))
-  const allTransactions = useAllTransactions()
+  const allTransactions = useAllTransactions(currentUser.data?.role === 2)
   const allUsers = useAllUsers(currentUser.data?.role === 2)
 
   const refreshAll = () => {

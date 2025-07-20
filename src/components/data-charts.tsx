@@ -47,7 +47,7 @@ export function DataCharts() {
   const pendingApprovals = usePendingApprovals()
   const currentUser = useCurrentUser()
   const recentTransactions = useRecentTransactions(BigInt(50)) // Get last 50 transactions
-  const allTransactions = useAllTransactions() // Get all transactions
+  const allTransactions = useAllTransactions(currentUser.data?.role === 2) // Get all transactions if admin
   const allUsers = useAllUsers(currentUser.data?.role === 2) // Get all users if admin
 
   // Determine if user can view approval data

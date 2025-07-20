@@ -153,26 +153,38 @@ export function useContract() {
     })
   }
 
-  const useAllTransactions = () => {
+  const useAllTransactions = (isAdmin: boolean = false) => {
     return useQuery({
       queryKey: ['all-transactions'],
       queryFn: async () => {
-        const service = getContractService()
-        const transactionIds = await service.getAllTransactions()
-        // If no transactions, return empty array
-        if (!transactionIds || transactionIds.length === 0) {
-          return []
+        try {
+          const service = getContractService()
+          
+          // Only proceed if user is admin
+          if (!isAdmin) {
+            throw new Error("Admin privileges required to view all transactions")
+          }
+          
+          const transactionIds = await service.getAllTransactions()
+          // If no transactions, return empty array
+          if (!transactionIds || transactionIds.length === 0) {
+            return []
+          }
+          const transactions = await Promise.all(
+            transactionIds.map(id => service.getTransaction(id))
+          )
+          return transactions
+        } catch (error) {
+          console.error("Error in useAllTransactions:", error)
+          throw error
         }
-        const transactions = await Promise.all(
-          transactionIds.map(id => service.getTransaction(id))
-        )
-        return transactions
       },
-      enabled: !!contract,
+      enabled: !!contract && !!account && isAdmin,
       retry: (failureCount, error) => {
-        // Don't retry if it's an admin role error
+        // Don't retry if it's an admin role error or privilege error
         if (error && typeof error === 'object' && 'message' in error && 
-            error.message.includes('Admin role required')) {
+            (error.message.includes('Admin role required') || 
+             error.message.includes('Admin privileges required'))) {
           return false
         }
         return failureCount < 3
