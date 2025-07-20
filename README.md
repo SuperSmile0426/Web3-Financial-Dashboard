@@ -250,17 +250,11 @@ For support and questions:
 2. Review the smart contract code
 3. Open an issue on GitHub
 
-## 🔮 Future Enhancements
-
-- [ ] Multi-chain support
-- [ ] Advanced analytics and charts
-- [ ] Mobile app version
-- [ ] API rate limiting
-- [ ] Advanced search and filtering
-- [ ] Export functionality
-- [ ] Audit logs
-- [ ] Multi-signature support
-
----
-
 **Note**: This is a demonstration project. For production use, ensure proper security audits and testing. 
+<img width="1680" height="845" alt="Screenshot 2025-07-21 002552" src="https://github.com/user-attachments/assets/71776e89-0dd4-4017-853d-432ddaf6f0af" />
+<img width="1646" height="895" alt="Screenshot 2025-07-21 002436" src="https://github.com/user-attachments/assets/e7b08faa-ee1a-4dcb-bd3f-3e7b51b44994" />
+<img width="1634" height="748" alt="Screenshot 2025-07-21 002413" src="https://github.com/user-attachments/assets/f5b787fe-c8e7-43f2-89da-c41959db4b7e" />
+<img width="1162" height="933" alt="Screenshot 2025-07-21 002351" src="https://github.com/user-attachments/assets/5ce05951-f4e8-41ef-b7f3-2bb5327f28c0" />
+<img width="1670" height="909" alt="Screenshot 2025-07-21 002314" src="https://github.com/user-attachments/assets/23965553-2005-47cb-ad0c-ee9a12772bf7" />
+
+
