@@ -7,7 +7,7 @@ import {
   ApprovalStatus, 
   UserRole 
 } from '@/types/contracts'
-import FinancialPlatformArtifact from '../../contract-technical-assignment/artifacts/contracts/FinancialPlatform.sol/FinancialPlatform.json';
+import FinancialPlatformArtifact from './FinancialPlatform.json';
 
 // Utility functions to convert bigint to number
 const convertBigIntToNumber = (value: bigint): number => {

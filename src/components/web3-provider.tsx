@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { ethers } from 'ethers'
-import FinancialPlatformArtifact from '../../contract-technical-assignment/artifacts/contracts/FinancialPlatform.sol/FinancialPlatform.json'
+import FinancialPlatformArtifact from '../lib/FinancialPlatform.json'
 
 interface Web3ContextType {
   account: string | null

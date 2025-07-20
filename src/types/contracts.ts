@@ -1,5 +1,5 @@
 import { ethers } from 'ethers'
-import FinancialPlatformArtifact from '../../contract-technical-assignment/artifacts/contracts/FinancialPlatform.sol/FinancialPlatform.json'
+import FinancialPlatformArtifact from '../lib/FinancialPlatform.json'
 
 // Contract ABI types based on the FinancialPlatform contract
 export interface Transaction {
