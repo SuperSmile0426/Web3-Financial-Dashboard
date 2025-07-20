@@ -405,46 +405,27 @@ export function DataCharts() {
     
     // Use the same data that's calculated for the overview charts
     const displayTransactionTrend = transactionTrend
-    
-    // Use the same total approval count as the overview chart
-    const approvalOverviewTotal = approvalData.datasets[0].data[0] // Total Approvals
-    const displayApprovalTrend = approvalTrend.map((value, index) => {
-      // If we have real approval data, use it; otherwise distribute the total
-      if (approvalTrend.some(v => v > 0)) {
-        return value
-      } else {
-        // Distribute the total approval count across the week
-        const weekdays = [1, 2, 3, 4, 5] // Mon-Fri
-        const weekends = [0, 6] // Sun, Sat
-        
-        if (weekdays.includes(index)) {
-          return Math.max(1, Math.floor(approvalOverviewTotal / 5))
-        } else {
-          return Math.max(0, Math.floor(approvalOverviewTotal / 10))
-        }
-      }
-    })
+    const displayApprovalTrend = approvalTrend
     
     // Calculate totals from the weekly data
     const weeklyTransactionTotal = displayTransactionTrend.reduce((sum, value) => sum + value, 0)
     const weeklyApprovalTotal = displayApprovalTrend.reduce((sum, value) => sum + value, 0)
     
-    // Use overview totals as the source of truth, but ensure weekly data matches
+    // Use overview totals as the source of truth
     const finalTransactionTotal = totalTransactions > 0 ? totalTransactions : weeklyTransactionTotal
-    const finalApprovalTotal = approvalOverviewTotal > 0 ? approvalOverviewTotal : weeklyApprovalTotal
+    const finalApprovalTotal = totalApprovals > 0 ? totalApprovals : weeklyApprovalTotal
     
     // Calculate max values for proper height scaling
     const maxTransactionValue = Math.max(...displayTransactionTrend, 1)
     const maxApprovalValue = Math.max(...displayApprovalTrend, 1)
     
-    console.log('Weekly Activity Trend - Data consistency check:', {
+    console.log('Weekly Activity Trend - Using actual weekly data:', {
       transactionTrend: displayTransactionTrend,
       approvalTrend: displayApprovalTrend,
-      approvalOverviewTotal,
       weeklyTransactionTotal,
       weeklyApprovalTotal,
-      overviewTotalTransactions: totalTransactions,
-      overviewTotalApprovals: totalApprovals,
+      totalTransactions,
+      totalApprovals,
       finalTransactionTotal,
       finalApprovalTotal,
       maxTransactionValue,
@@ -452,75 +433,76 @@ export function DataCharts() {
     })
     
     return (
-      <Card>
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center space-x-2">
-            <TrendingUp className="h-4 w-4 text-green-500" />
-            <span>Weekly Activity Trend</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="space-y-6">
-            <div>
-              <h4 className="text-sm font-medium text-gray-700 pb-12">Transactions</h4>
-              <div className="flex items-end space-x-1 h-32">
-                {displayTransactionTrend.map((value, index) => {
-                  // Calculate height in pixels for better control
-                  const maxHeight = 120 // Maximum height in pixels
-                  const height = value === 0 ? 8 : Math.max((value / maxTransactionValue) * maxHeight, 16)
-                  console.log(`Transaction bar ${days[index]}: value=${value}, maxValue=${maxTransactionValue}, height=${height}px`)
+      <></>
+      // <Card>
+      //   <CardHeader className="pb-4">
+      //     <CardTitle className="flex items-center space-x-2">
+      //       <TrendingUp className="h-4 w-4 text-green-500" />
+      //       <span>Weekly Activity Trend</span>
+      //     </CardTitle>
+      //   </CardHeader>
+      //   <CardContent className="pt-0">
+      //     <div className="space-y-6">
+      //       <div>
+      //         <h4 className="text-sm font-medium text-gray-700 pb-12">Transactions</h4>
+      //         <div className="flex items-end space-x-1 h-32">
+      //           {displayTransactionTrend.map((value, index) => {
+      //             // Calculate height in pixels for better control
+      //             const maxHeight = 120 // Maximum height in pixels
+      //             const height = value === 0 ? 8 : Math.max((value / maxTransactionValue) * maxHeight, 16)
+      //             console.log(`Transaction bar ${days[index]}: value=${value}, maxValue=${maxTransactionValue}, height=${height}px`)
                   
-                  return (
-                    <div key={index} className="flex-1 flex flex-col items-center">
-                      <div
-                        className="w-full bg-blue-500 rounded-t transition-all duration-300"
-                        style={{ 
-                          height: `${height}px`
-                        }}
-                      />
-                      <span className="text-xs text-gray-500 mt-1">{days[index]}</span>
-                      <span className="text-xs text-gray-400">{value}</span>
-                    </div>
-                  )
-                })}
-              </div>
-              <div className="flex justify-between text-xs text-gray-500 mt-2">
-                <span>Total: {finalTransactionTotal}</span>
-                <span>Max: {maxTransactionValue}</span>
-              </div>
-            </div>
+      //             return (
+      //               <div key={index} className="flex-1 flex flex-col items-center">
+      //                 <div
+      //                   className="w-full bg-blue-500 rounded-t transition-all duration-300"
+      //                   style={{ 
+      //                     height: `${height}px`
+      //                   }}
+      //                 />
+      //                 <span className="text-xs text-gray-500 mt-1">{days[index]}</span>
+      //                 <span className="text-xs text-gray-400">{value}</span>
+      //               </div>
+      //             )
+      //           })}
+      //         </div>
+      //         <div className="flex justify-between text-xs text-gray-500 mt-2">
+      //           <span>Total: {finalTransactionTotal}</span>
+      //           <span>Max: {maxTransactionValue}</span>
+      //         </div>
+      //       </div>
             
-            <div>
-              <h4 className="text-sm font-medium text-gray-700 pb-12">Approvals</h4>
-              <div className="flex items-end space-x-1 h-32">
-                {displayApprovalTrend.map((value, index) => {
-                  // Calculate height in pixels for better control
-                  const maxHeight = 120 // Maximum height in pixels
-                  const height = value === 0 ? 8 : Math.max((value / maxApprovalValue) * maxHeight, 16)
-                  console.log(`Approval bar ${days[index]}: value=${value}, maxValue=${maxApprovalValue}, height=${height}px`)
+      //       <div>
+      //         <h4 className="text-sm font-medium text-gray-700 pb-12">Approvals</h4>
+      //         <div className="flex items-end space-x-1 h-32">
+      //           {displayApprovalTrend.map((value, index) => {
+      //             // Calculate height in pixels for better control
+      //             const maxHeight = 120 // Maximum height in pixels
+      //             const height = value === 0 ? 8 : Math.max((value / maxApprovalValue) * maxHeight, 16)
+      //             console.log(`Approval bar ${days[index]}: value=${value}, maxValue=${maxApprovalValue}, height=${height}px`)
                   
-                  return (
-                    <div key={index} className="flex-1 flex flex-col items-center">
-                      <div
-                        className="w-full bg-purple-500 rounded-t transition-all duration-300"
-                        style={{ 
-                          height: `${height}px`
-                        }}
-                      />
-                      <span className="text-xs text-gray-500 mt-1">{days[index]}</span>
-                      <span className="text-xs text-gray-400">{value}</span>
-                    </div>
-                  )
-                })}
-              </div>
-              <div className="flex justify-between text-xs text-gray-500 mt-2">
-                <span>Total: {finalApprovalTotal}</span>
-                <span>Max: {maxApprovalValue}</span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      //             return (
+      //               <div key={index} className="flex-1 flex flex-col items-center">
+      //                 <div
+      //                   className="w-full bg-purple-500 rounded-t transition-all duration-300"
+      //                   style={{ 
+      //                     height: `${height}px`
+      //                   }}
+      //                 />
+      //                 <span className="text-xs text-gray-500 mt-1">{days[index]}</span>
+      //                 <span className="text-xs text-gray-400">{value}</span>
+      //               </div>
+      //             )
+      //           })}
+      //         </div>
+      //         <div className="flex justify-between text-xs text-gray-500 mt-2">
+      //           <span>Total: {finalApprovalTotal}</span>
+      //           <span>Max: {maxApprovalValue}</span>
+      //         </div>
+      //       </div>
+      //     </div>
+      //   </CardContent>
+      // </Card>
     )
   }
 
