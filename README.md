@@ -182,20 +182,6 @@ The dashboard listens to smart contract events for real-time updates:
 - User role updates
 - System-wide notifications
 
-## 🧪 Testing
-
-### Smart Contract Testing
-
-```bash
-cd contract-technical-assignment
-npm test
-```
-
-### Frontend Testing
-
-```bash
-npm run test
-```
 
 ## 📦 Build & Deploy
 
